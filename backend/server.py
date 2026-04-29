@@ -170,6 +170,17 @@ STATION_DATA = [
     {"name": "Nynäshamn", "mode": "Pendeltåg", "weight": 20, "keywords": ["nynäs", "gotlandsfärjan", "färjeterminal"]},
 ]
 
+def normalize_swedish(text: str) -> str:
+    """Normalize Swedish characters for flexible matching."""
+    replacements = {
+        'å': 'a', 'ä': 'a', 'ö': 'o',
+        'é': 'e', 'è': 'e', 'ü': 'u',
+    }
+    text = text.lower()
+    for src, dst in replacements.items():
+        text = text.replace(src, dst)
+    return text
+
 # Build lookup indices for fast synonym matching
 _synonym_index: dict[str, list[dict]] = {}  # normalized keyword -> list of station entries
 
@@ -194,18 +205,6 @@ def _name_variants(name: str) -> list[str]:
     return list({low, normed, no_hyphen, normed_no_hyphen})
 
 _build_synonym_index()
-
-
-def normalize_swedish(text: str) -> str:
-    """Normalize Swedish characters for flexible matching."""
-    replacements = {
-        'å': 'a', 'ä': 'a', 'ö': 'o',
-        'é': 'e', 'è': 'e', 'ü': 'u',
-    }
-    text = text.lower()
-    for src, dst in replacements.items():
-        text = text.replace(src, dst)
-    return text
 
 
 def _strip_all(text: str) -> str:
