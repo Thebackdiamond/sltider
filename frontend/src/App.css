@@ -1,0 +1,94 @@
+/* Stockholm Transit Search - Terminal Theme */
+
+/* Glassmorphism header */
+.glass-header {
+    @apply sticky top-0 z-50 backdrop-blur-2xl border-b;
+    background: rgba(10, 10, 10, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Technical grid card */
+.tech-card {
+    @apply border rounded-none md:rounded-lg shadow-none;
+    background: #141414;
+    border-color: #262626;
+}
+
+/* Departure row hover */
+.departure-row {
+    @apply transition-all duration-200 ease-in-out;
+}
+
+.departure-row:hover {
+    background: #1A1A1A;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Live pulse indicator */
+.live-pulse {
+    @apply w-2 h-2 rounded-full bg-red-500;
+    animation: pulse-live 2s ease-in-out infinite;
+}
+
+/* Time display */
+.time-display {
+    @apply font-display font-black tracking-tighter;
+}
+
+/* Small label style */
+.small-label {
+    @apply text-xs font-bold uppercase tracking-[0.2em] text-neutral-400;
+}
+
+/* Search input override for dark theme */
+.search-input {
+    @apply bg-transparent border-0 focus:ring-0 text-white placeholder:text-neutral-500;
+}
+
+/* Transit mode line badges */
+.line-badge {
+    @apply px-2 py-1 text-sm font-bold rounded-sm border min-w-[3rem] text-center font-mono;
+}
+
+.line-badge-bus {
+    @apply bg-red-500/20 text-red-400 border-red-500/40;
+}
+
+.line-badge-metro {
+    @apply bg-blue-500/20 text-blue-400 border-blue-500/40;
+}
+
+.line-badge-train {
+    @apply bg-green-500/20 text-green-400 border-green-500/40;
+}
+
+.line-badge-tram {
+    @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/40;
+}
+
+.line-badge-ship, .line-badge-ferry {
+    @apply bg-cyan-500/20 text-cyan-400 border-cyan-500/40;
+}
+
+.line-badge-walk {
+    @apply bg-neutral-500/20 text-neutral-400 border-neutral-500/40;
+}
+
+/* Favorite button */
+.favorite-btn {
+    @apply transition-all duration-200;
+}
+
+.favorite-btn:hover {
+    @apply scale-110;
+}
+
+.favorite-btn.active {
+    @apply text-yellow-400;
+}
+
+/* Skeleton loading */
+.skeleton {
+    @apply animate-pulse rounded;
+    background: #262626;
+}

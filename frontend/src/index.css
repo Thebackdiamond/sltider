@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 4%;
+        --foreground: 0 0% 100%;
+        --card: 0 0% 8%;
+        --card-foreground: 0 0% 100%;
+        --popover: 0 0% 8%;
+        --popover-foreground: 0 0% 100%;
+        --primary: 0 0% 100%;
+        --primary-foreground: 0 0% 4%;
+        --secondary: 0 0% 10%;
+        --secondary-foreground: 0 0% 100%;
+        --muted: 0 0% 15%;
+        --muted-foreground: 0 0% 64%;
+        --accent: 0 0% 15%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 0 0% 15%;
+        --input: 0 0% 15%;
+        --ring: 0 0% 100%;
+        --radius: 0.25rem;
+        
+        /* Transit mode colors */
+        --bus: 0 79% 60%;
+        --metro: 211 100% 50%;
+        --train: 142 71% 45%;
+        --tram: 45 100% 50%;
+        --ship: 199 89% 48%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-[#0A0A0A] text-white antialiased;
+        font-family: 'IBM Plex Sans', sans-serif;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Chivo', sans-serif;
+    }
+    
+    code, .mono {
+        font-family: 'JetBrains Mono', monospace;
+    }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #141414;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #262626;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #404040;
+}
+
+/* Pulse animation for live indicator */
+@keyframes pulse-live {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse-live {
+    animation: pulse-live 2s ease-in-out infinite;
+}
+
+/* Transport mode badge colors */
+.badge-bus {
+    @apply bg-red-500/20 text-red-400 border-red-500/30;
+}
+
+.badge-metro {
+    @apply bg-blue-500/20 text-blue-400 border-blue-500/30;
+}
+
+.badge-train {
+    @apply bg-green-500/20 text-green-400 border-green-500/30;
+}
+
+.badge-tram {
+    @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30;
+}
+
+.badge-ship, .badge-ferry {
+    @apply bg-cyan-500/20 text-cyan-400 border-cyan-500/30;
+}
+
+/* Debug wrapper compatibility */
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+}
