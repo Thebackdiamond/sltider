@@ -4,6 +4,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import {
   Command,
   CommandInput,
@@ -283,6 +286,12 @@ const Home = () => {
   const [tripToResults, setTripToResults] = useState([]);
   const [trips, setTrips] = useState([]);
   const [isLoadingTrips, setIsLoadingTrips] = useState(false);
+  const [tripDate, setTripDate] = useState("");
+  const [tripTime, setTripTime] = useState("");
+  const [tripTimeType, setTripTimeType] = useState("departure");
+  const [tripNumResults, setTripNumResults] = useState(5);
+  const [tripTransportModes, setTripTransportModes] = useState([]);
+  const [selectedTrip, setSelectedTrip] = useState(null);
 
   // Nearby stops state
   const [nearbyStops, setNearbyStops] = useState([]);
@@ -457,9 +466,18 @@ const Home = () => {
     try {
       const originId = tripFrom.global_id || tripFrom.id;
       const destId = tripTo.global_id || tripTo.id;
-      const response = await axios.get(`${API}/trips`, {
-        params: { origin_id: originId, dest_id: destId },
-      });
+      const params = { 
+        origin_id: originId, 
+        dest_id: destId,
+        num_trips: tripNumResults,
+      };
+      
+      if (tripDate) params.date = tripDate;
+      if (tripTime) params.time = tripTime;
+      if (tripTimeType) params.time_type = tripTimeType;
+      if (tripTransportModes.length > 0) params.transport_modes = tripTransportModes.join(",");
+      
+      const response = await axios.get(`${API}/trips`, { params });
       setTrips(response.data.trips);
       if (response.data.trips.length === 0) toast.info("Inga resor hittades");
     } catch (e) {
@@ -800,11 +818,100 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-              <Button onClick={handlePlanTrip} disabled={!tripFrom || !tripTo || isLoadingTrips}
-                className="w-full md:w-auto bg-white text-black hover:bg-neutral-200 font-semibold h-12 px-8"
-                data-testid="trip-planner-submit">
-                {isLoadingTrips ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Söker...</> : <><Search className="w-4 h-4 mr-2" />Sök resa</>}
-              </Button>
+
+              {/* Advanced Options */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="space-y-2">
+                  <label className="small-label">Datum (valfritt)</label>
+                  <Input
+                    type="date"
+                    value={tripDate}
+                    onChange={(e) => setTripDate(e.target.value)}
+                    className="bg-[#1A1A1A] border-[#262626] text-white h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="small-label">Tid (valfritt)</label>
+                  <Input
+                    type="time"
+                    value={tripTime}
+                    onChange={(e) => setTripTime(e.target.value)}
+                    className="bg-[#1A1A1A] border-[#262626] text-white h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="small-label">Tidstyp</label>
+                  <select
+                    value={tripTimeType}
+                    onChange={(e) => setTripTimeType(e.target.value)}
+                    className="w-full bg-[#1A1A1A] border border-[#262626] text-white h-12 px-3 rounded"
+                  >
+                    <option value="departure">Avgång</option>
+                    <option value="arrival">Ankomst</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Transport Mode Filter */}
+              <div className="space-y-2 mb-6">
+                <label className="small-label">Trafikslag (valfritt)</label>
+                <div className="flex flex-wrap gap-2">
+                  {TRANSPORT_MODES.slice(1).map((mode) => (
+                    <button
+                      key={mode.key}
+                      onClick={() => {
+                        setTripTransportModes(prev =>
+                          prev.includes(mode.key)
+                            ? prev.filter(m => m !== mode.key)
+                            : [...prev, mode.key]
+                        );
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all border ${
+                        tripTransportModes.includes(mode.key)
+                          ? "bg-white text-black border-white"
+                          : "bg-transparent text-neutral-400 border-[#262626] hover:border-white/30"
+                      }`}
+                    >
+                      {mode.icon && <mode.icon className={`w-3 h-3 ${tripTransportModes.includes(mode.key) ? "text-black" : mode.color}`} />}
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Number of Results */}
+              <div className="space-y-2 mb-6">
+                <label className="small-label">Antal alternativ: {tripNumResults}</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={tripNumResults}
+                  onChange={(e) => setTripNumResults(parseInt(e.target.value))}
+                  className="w-full accent-white"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button onClick={handlePlanTrip} disabled={!tripFrom || !tripTo || isLoadingTrips}
+                  className="flex-1 md:w-auto bg-white text-black hover:bg-neutral-200 font-semibold h-12 px-8"
+                  data-testid="trip-planner-submit">
+                  {isLoadingTrips ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Söker...</> : <><Search className="w-4 h-4 mr-2" />Sök resa</>}
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setTripDate("");
+                    setTripTime("");
+                    setTripTimeType("departure");
+                    setTripNumResults(5);
+                    setTripTransportModes([]);
+                  }}
+                  variant="outline"
+                  className="bg-transparent border-[#262626] text-neutral-400 hover:text-white hover:border-white/30 h-12 px-6"
+                >
+                  Rensa filter
+                </Button>
+              </div>
             </div>
 
             {/* Trip Results */}
@@ -816,7 +923,9 @@ const Home = () => {
                 </div>
                 <div className="divide-y divide-[#262626]">
                   {trips.map((trip, ti) => (
-                    <div key={ti} className="p-4 hover:bg-[#1A1A1A] transition-colors">
+                    <div key={ti} 
+                      className={`p-4 hover:bg-[#1A1A1A] transition-colors cursor-pointer ${selectedTrip === ti ? "bg-[#1A1A1A]" : ""}`}
+                      onClick={() => setSelectedTrip(selectedTrip === ti ? null : ti)}>
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <span className="time-display text-xl text-white">{trip.departure_time}</span>
@@ -849,6 +958,49 @@ const Home = () => {
                           </div>
                         ))}
                       </div>
+                      {/* Map for selected trip */}
+                      {selectedTrip === ti && (
+                        <div className="mt-4 pt-4 border-t border-[#262626]">
+                          <div className="h-64 rounded-lg overflow-hidden">
+                            <MapContainer
+                              style={{ height: "100%", width: "100%" }}
+                              center={[59.3293, 18.0686]}
+                              zoom={12}
+                              scrollWheelZoom={false}
+                            >
+                              <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                              />
+                              {trip.legs.map((leg, li) => {
+                                if (leg.origin_lat && leg.origin_lon && leg.dest_lat && leg.dest_lon) {
+                                  const positions = [
+                                    [leg.origin_lat, leg.origin_lon],
+                                    [leg.dest_lat, leg.dest_lon]
+                                  ];
+                                  return (
+                                    <div key={li}>
+                                      <Polyline
+                                        positions={positions}
+                                        color={leg.transport_mode === "WALK" ? "#666" : "#fff"}
+                                        weight={3}
+                                        opacity={0.8}
+                                      />
+                                      <Marker position={[leg.origin_lat, leg.origin_lon]}>
+                                        <Popup>{leg.origin}</Popup>
+                                      </Marker>
+                                      <Marker position={[leg.dest_lat, leg.dest_lon]}>
+                                        <Popup>{leg.destination}</Popup>
+                                      </Marker>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </MapContainer>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

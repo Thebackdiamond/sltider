@@ -74,6 +74,10 @@ class TripLeg(BaseModel):
     departure_time: str
     arrival_time: str
     duration_minutes: int
+    origin_lat: Optional[float] = None
+    origin_lon: Optional[float] = None
+    dest_lat: Optional[float] = None
+    dest_lon: Optional[float] = None
 
 
 class Trip(BaseModel):
@@ -488,8 +492,13 @@ def calculate_display_time(time_str: Optional[str]) -> str:
 async def plan_trip(
     origin_id: str = Query(..., description="Origin stop global ID"),
     dest_id: str = Query(..., description="Destination stop global ID"),
+    date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format (default: today)"),
+    time: Optional[str] = Query(None, description="Time in HH:MM format (default: now)"),
+    time_type: Optional[str] = Query("departure", description="Time type: 'departure' or 'arrival'"),
+    num_trips: Optional[int] = Query(5, description="Number of trip options (max 10)"),
+    transport_modes: Optional[str] = Query(None, description="Comma-separated transport modes: BUS,METRO,TRAIN,TRAM,SHIP"),
 ):
-    """Plan a trip using SL Journey Planner v2"""
+    """Plan a trip using SL Journey Planner v2 with advanced options"""
     try:
         async with await get_http_client() as http:
             params = {
@@ -497,8 +506,29 @@ async def plan_trip(
                 "type_destination": "any",
                 "name_origin": origin_id,
                 "name_destination": dest_id,
-                "calc_number_of_trips": 3,
+                "calc_number_of_trips": min(num_trips, 10),
             }
+
+            # Add date/time if provided
+            if date:
+                params["date"] = date
+            if time:
+                params["time"] = time
+            if time_type in ["departure", "arrival"]:
+                params["time_type"] = time_type
+
+            # Add transport mode filter if provided
+            if transport_modes:
+                # Map to SL's format
+                mode_map = {
+                    "BUS": "bus",
+                    "METRO": "metro",
+                    "TRAIN": "train",
+                    "TRAM": "tram",
+                    "SHIP": "ship",
+                }
+                modes = [mode_map.get(m.upper(), m.lower()) for m in transport_modes.split(",")]
+                params["transport_modes"] = ",".join(modes)
 
             response = await http.get(
                 f"{SL_JOURNEYPLANNER_V2_BASE}/trips", params=params
@@ -524,6 +554,12 @@ async def plan_trip(
                     dest_parent = dest_data.get("parent", {})
                     origin_name = origin_parent.get("disassembledName") or origin_parent.get("name", origin_data.get("name", "?"))
                     dest_name = dest_parent.get("disassembledName") or dest_parent.get("name", dest_data.get("name", "?"))
+
+                    # Get coordinates
+                    origin_lat = origin_data.get("lat")
+                    origin_lon = origin_data.get("lon")
+                    dest_lat = dest_data.get("lat")
+                    dest_lon = dest_data.get("lon")
 
                     # Get times
                     dep_time = origin_data.get("departureTimeEstimated") or origin_data.get("departureTimePlanned", "")
@@ -566,6 +602,10 @@ async def plan_trip(
                             departure_time=dep_display,
                             arrival_time=arr_display,
                             duration_minutes=duration_min,
+                            origin_lat=origin_lat,
+                            origin_lon=origin_lon,
+                            dest_lat=dest_lat,
+                            dest_lon=dest_lon,
                         )
                     )
 
