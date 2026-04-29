@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Analytics } from "@vercel/analytics/react";
 import {
   Command,
   CommandInput,
@@ -747,7 +748,7 @@ const Home = () => {
             </div>
           </TabsContent>
 
-          {/* ── Trip Planner Tab ── */}
+          {/* ── Trip Planner Tab ─��� */}
           <TabsContent value="planner" className="space-y-6">
             <div className="tech-card p-6">
               <h2 className="font-display text-lg font-bold text-white mb-6">Planera din resa</h2>
@@ -1163,6 +1164,7 @@ function App() {
           <Route path="/" element={<Home />} />
         </Routes>
       </BrowserRouter>
+      <Analytics />
     </div>
   );
 }
