@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, Marker, Popup, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
@@ -286,7 +286,7 @@ const Home = () => {
   const [tripDate, setTripDate] = useState("");
   const [tripTime, setTripTime] = useState("");
   const [tripTimeType, setTripTimeType] = useState("departure");
-  const [tripNumResults, setTripNumResults] = useState(5);
+  const [tripNumResults, setTripNumResults] = useState(3);
   const [tripTransportModes, setTripTransportModes] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
 
@@ -882,7 +882,7 @@ const Home = () => {
                 <input
                   type="range"
                   min="1"
-                  max="10"
+                  max="3"
                   value={tripNumResults}
                   onChange={(e) => setTripNumResults(parseInt(e.target.value))}
                   className="w-full accent-white"

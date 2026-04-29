@@ -495,16 +495,18 @@ async def plan_trip(
     date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format (default: today)"),
     time: Optional[str] = Query(None, description="Time in HH:MM format (default: now)"),
     time_type: Optional[str] = Query("departure", description="Time type: 'departure' or 'arrival'"),
-    num_trips: Optional[int] = Query(5, description="Number of trip options (max 10)"),
+    num_trips: Optional[int] = Query(3, description="Number of trip options (max 3)"),
     transport_modes: Optional[str] = Query(None, description="Comma-separated transport modes: BUS,METRO,TRAIN,TRAM,SHIP"),
 ):
     """Plan a trip using SL Journey Planner v2 with advanced options"""
     try:
         async with await get_http_client() as http:
             params = {
-                "originId": origin_id,
-                "destId": dest_id,
-                "calc_number_of_trips": min(num_trips, 10),
+                "name_origin": origin_id,
+                "name_destination": dest_id,
+                "type_origin": "any",
+                "type_destination": "any",
+                "calc_number_of_trips": min(num_trips, 3),
                 "format": "json",
             }
 
@@ -535,6 +537,7 @@ async def plan_trip(
 
             logger.info(f"SL API response status: {response.status_code}")
             logger.info(f"SL API params: {params}")
+            logger.info(f"SL API response text: {response.text[:500]}")
 
             if response.status_code != 200:
                 logger.error(f"Journey planner error: {response.status_code}")
@@ -543,6 +546,7 @@ async def plan_trip(
 
             data = response.json()
             logger.info(f"SL API data keys: {data.keys() if isinstance(data, dict) else type(data)}")
+            logger.info(f"SL API journeys count: {len(data.get('journeys', [])) if isinstance(data, dict) else 'N/A'}")
             trips = []
 
             for journey in data.get("journeys", []):
