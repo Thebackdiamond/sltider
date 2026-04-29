@@ -502,11 +502,10 @@ async def plan_trip(
     try:
         async with await get_http_client() as http:
             params = {
-                "type_origin": "any",
-                "type_destination": "any",
-                "name_origin": origin_id,
-                "name_destination": dest_id,
+                "originId": origin_id,
+                "destId": dest_id,
                 "calc_number_of_trips": min(num_trips, 10),
+                "format": "json",
             }
 
             # Add date/time if provided
@@ -534,11 +533,16 @@ async def plan_trip(
                 f"{SL_JOURNEYPLANNER_V2_BASE}/trips", params=params
             )
 
+            logger.info(f"SL API response status: {response.status_code}")
+            logger.info(f"SL API params: {params}")
+
             if response.status_code != 200:
                 logger.error(f"Journey planner error: {response.status_code}")
+                logger.error(f"Response: {response.text}")
                 return TripPlanResponse(trips=[])
 
             data = response.json()
+            logger.info(f"SL API data keys: {data.keys() if isinstance(data, dict) else type(data)}")
             trips = []
 
             for journey in data.get("journeys", []):
@@ -739,8 +743,3 @@ async def startup_event():
         logger.info("Sites cache pre-warmed successfully")
     except Exception as exc:
         logger.warning(f"Failed to pre-warm sites cache: {exc}")
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
