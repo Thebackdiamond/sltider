@@ -534,6 +534,10 @@ async def plan_trip(
                     modes = [mode_map.get(m.upper(), m.lower()) for m in transport_modes.split(",")]
                     params["transport_modes"] = ",".join(modes)
 
+                # Add page parameter for second call to get next results
+                if call_num == 1:
+                    params["page"] = 2
+
                 response = await http.get(
                     f"{SL_JOURNEYPLANNER_V2_BASE}/trips", params=params
                 )

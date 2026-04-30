@@ -925,7 +925,7 @@ const Home = () => {
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 mb-3">
                         {trip.legs.map((leg, li) => (
                           <div key={li} className="flex items-center gap-1">
                             {li > 0 && <ArrowRight className="w-3 h-3 text-neutral-500" />}
@@ -937,6 +937,24 @@ const Home = () => {
                                 Gång
                               </Badge>
                             )}
+                          </div>
+                        ))}
+                      </div>
+                      {/* Leg details */}
+                      <div className="space-y-2 text-sm">
+                        {trip.legs.map((leg, li) => (
+                          <div key={li} className="flex items-start gap-2 text-neutral-400">
+                            <span className="text-neutral-500">{li + 1}.</span>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white">{leg.origin}</span>
+                                <ArrowRight className="w-3 h-3" />
+                                <span className="text-white">{leg.destination}</span>
+                              </div>
+                              <div className="text-xs text-neutral-500 mt-0.5">
+                                {leg.departure_time} → {leg.arrival_time} ({leg.duration_minutes} min)
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
