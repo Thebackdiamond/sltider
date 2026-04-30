@@ -514,10 +514,13 @@ async def plan_trip(
                 }
 
                 # Add date/time if provided
-                if date:
-                    params["date"] = date
-                if time:
-                    params["time"] = time
+                base_date = date
+                base_time = time
+                
+                if base_date:
+                    params["date"] = base_date
+                if base_time:
+                    params["time"] = base_time
                 if time_type in ["departure", "arrival"]:
                     params["time_type"] = time_type
 
@@ -534,9 +537,19 @@ async def plan_trip(
                     modes = [mode_map.get(m.upper(), m.lower()) for m in transport_modes.split(",")]
                     params["transport_modes"] = ",".join(modes)
 
-                # Add page parameter for second call to get next results
+                # For second call, add time offset to get later trips
                 if call_num == 1:
-                    params["page"] = 2
+                    if base_time:
+                        # Add 30 minutes to the time
+                        from datetime import datetime, timedelta
+                        time_obj = datetime.strptime(base_time, "%H:%M")
+                        time_obj += timedelta(minutes=30)
+                        params["time"] = time_obj.strftime("%H:%M")
+                    else:
+                        # If no time specified, use current time + 30 min
+                        from datetime import datetime, timedelta
+                        now = datetime.now()
+                        params["time"] = (now + timedelta(minutes=30)).strftime("%H:%M")
 
                 response = await http.get(
                     f"{SL_JOURNEYPLANNER_V2_BASE}/trips", params=params

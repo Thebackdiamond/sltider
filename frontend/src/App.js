@@ -967,7 +967,16 @@ const Home = () => {
                           <div className="h-64 rounded-lg overflow-hidden">
                             <MapContainer
                               style={{ height: "100%", width: "100%" }}
-                              center={[59.3293, 18.0686]}
+                              center={(() => {
+                                // Calculate center from trip coordinates
+                                const coords = trip.legs
+                                  .filter(leg => leg.origin_lat && leg.origin_lon)
+                                  .map(leg => [leg.origin_lat, leg.origin_lon]);
+                                if (coords.length === 0) return [59.3293, 18.0686];
+                                const avgLat = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+                                const avgLon = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+                                return [avgLat, avgLon];
+                              })()}
                               zoom={12}
                               scrollWheelZoom={false}
                             >
