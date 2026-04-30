@@ -500,82 +500,55 @@ async def plan_trip(
     """Plan a trip using SL Journey Planner v2 with advanced options"""
     try:
         async with await get_http_client() as http:
-            # Make 2 API calls to get up to 6 results (SL API max is 3 per call)
-            all_journeys = []
-            
-            for call_num in range(2):
-                params = {
-                    "name_origin": origin_id,
-                    "name_destination": dest_id,
-                    "type_origin": "any",
-                    "type_destination": "any",
-                    "calc_number_of_trips": 3,
-                    "format": "json",
+            params = {
+                "name_origin": origin_id,
+                "name_destination": dest_id,
+                "type_origin": "any",
+                "type_destination": "any",
+                "calc_number_of_trips": 3,
+                "format": "json",
+            }
+
+            # Add date/time if provided
+            if date:
+                params["date"] = date
+            if time:
+                params["time"] = time
+            if time_type in ["departure", "arrival"]:
+                params["time_type"] = time_type
+
+            # Add transport mode filter if provided
+            if transport_modes:
+                # Map to SL's format
+                mode_map = {
+                    "BUS": "bus",
+                    "METRO": "metro",
+                    "TRAIN": "train",
+                    "TRAM": "tram",
+                    "SHIP": "ship",
                 }
+                modes = [mode_map.get(m.upper(), m.lower()) for m in transport_modes.split(",")]
+                params["transport_modes"] = ",".join(modes)
 
-                # Add date/time if provided
-                base_date = date
-                base_time = time
-                
-                if base_date:
-                    params["date"] = base_date
-                if base_time:
-                    params["time"] = base_time
-                if time_type in ["departure", "arrival"]:
-                    params["time_type"] = time_type
+            response = await http.get(
+                f"{SL_JOURNEYPLANNER_V2_BASE}/trips", params=params
+            )
 
-                # Add transport mode filter if provided
-                if transport_modes:
-                    # Map to SL's format
-                    mode_map = {
-                        "BUS": "bus",
-                        "METRO": "metro",
-                        "TRAIN": "train",
-                        "TRAM": "tram",
-                        "SHIP": "ship",
-                    }
-                    modes = [mode_map.get(m.upper(), m.lower()) for m in transport_modes.split(",")]
-                    params["transport_modes"] = ",".join(modes)
+            logger.info(f"SL API response status: {response.status_code}")
+            logger.info(f"SL API params: {params}")
 
-                # For second call, add time offset to get later trips
-                if call_num == 1:
-                    if base_time:
-                        # Add 30 minutes to the time
-                        from datetime import datetime, timedelta
-                        time_obj = datetime.strptime(base_time, "%H:%M")
-                        time_obj += timedelta(minutes=30)
-                        params["time"] = time_obj.strftime("%H:%M")
-                    else:
-                        # If no time specified, use current time + 30 min
-                        from datetime import datetime, timedelta
-                        now = datetime.now()
-                        params["time"] = (now + timedelta(minutes=30)).strftime("%H:%M")
+            if response.status_code != 200:
+                logger.error(f"Journey planner error: {response.status_code}")
+                logger.error(f"Response: {response.text}")
+                return TripPlanResponse(trips=[])
 
-                response = await http.get(
-                    f"{SL_JOURNEYPLANNER_V2_BASE}/trips", params=params
-                )
-
-                logger.info(f"SL API call {call_num + 1} response status: {response.status_code}")
-                logger.info(f"SL API params: {params}")
-
-                if response.status_code != 200:
-                    logger.error(f"Journey planner error: {response.status_code}")
-                    logger.error(f"Response: {response.text}")
-                    continue
-
-                data = response.json()
-                journeys = data.get("journeys", [])
-                logger.info(f"SL API call {call_num + 1} journeys count: {len(journeys)}")
-                all_journeys.extend(journeys)
-                
-                # If we got fewer than 3 results, don't make a second call
-                if len(journeys) < 3:
-                    break
-
-            logger.info(f"Total journeys collected: {len(all_journeys)}")
+            data = response.json()
+            journeys = data.get("journeys", [])
+            logger.info(f"SL API journeys count: {len(journeys)}")
+            
             trips = []
 
-            for journey in all_journeys:
+            for journey in journeys:
                 legs = []
                 for leg in journey.get("legs", []):
                     origin_data = leg.get("origin", {})
