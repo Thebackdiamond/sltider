@@ -747,9 +747,11 @@ const Home = () => {
 
           {/* ── Trip Planner Tab ── */}
           <TabsContent value="planner" className="space-y-6">
-            <div className="tech-card p-6">
-              <h2 className="font-display text-lg font-bold text-white mb-6">Planera din resa</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className={`grid gap-6 ${trips.length > 0 ? "grid-cols-1 lg:grid-cols-2" : ""}`}>
+              {/* Input Form */}
+              <div className="tech-card p-6">
+                <h2 className="font-display text-lg font-bold text-white mb-6">Planera din resa</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {/* From */}
                 <div className="space-y-2">
                   <label className="small-label">Från</label>
@@ -925,7 +927,7 @@ const Home = () => {
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2 mb-3">
+                      <div className="flex flex-wrap gap-2">
                         {trip.legs.map((leg, li) => (
                           <div key={li} className="flex items-center gap-1">
                             {li > 0 && <ArrowRight className="w-3 h-3 text-neutral-500" />}
@@ -940,27 +942,28 @@ const Home = () => {
                           </div>
                         ))}
                       </div>
-                      {/* Leg details */}
-                      <div className="space-y-2 text-sm">
-                        {trip.legs.map((leg, li) => (
-                          <div key={li} className="flex items-start gap-2 text-neutral-400">
-                            <span className="text-neutral-500">{li + 1}.</span>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-white">{leg.origin}</span>
-                                <ArrowRight className="w-3 h-3" />
-                                <span className="text-white">{leg.destination}</span>
-                              </div>
-                              <div className="text-xs text-neutral-500 mt-0.5">
-                                {leg.departure_time} → {leg.arrival_time} ({leg.duration_minutes} min)
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {/* Map for selected trip */}
+                      {/* Expanded details for selected trip */}
                       {selectedTrip === ti && (
                         <div className="mt-4 pt-4 border-t border-[#262626]">
+                          {/* Leg details */}
+                          <div className="space-y-3 text-sm mb-4">
+                            {trip.legs.map((leg, li) => (
+                              <div key={li} className="flex items-start gap-2 text-neutral-400">
+                                <span className="text-neutral-500">{li + 1}.</span>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-white">{leg.origin}</span>
+                                    <ArrowRight className="w-3 h-3" />
+                                    <span className="text-white">{leg.destination}</span>
+                                  </div>
+                                  <div className="text-xs text-neutral-500 mt-0.5">
+                                    {leg.departure_time} → {leg.arrival_time} ({leg.duration_minutes} min)
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {/* Map */}
                           <div className="h-64 rounded-lg overflow-hidden">
                             <MapContainer
                               style={{ height: "100%", width: "100%" }}
@@ -1006,6 +1009,7 @@ const Home = () => {
                 </div>
               </div>
             )}
+            </div>
           </TabsContent>
 
           {/* ── Nearby Tab ── */}
