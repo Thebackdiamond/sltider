@@ -286,7 +286,6 @@ const Home = () => {
   const [tripDate, setTripDate] = useState("");
   const [tripTime, setTripTime] = useState("");
   const [tripTimeType, setTripTimeType] = useState("departure");
-  const [tripNumResults, setTripNumResults] = useState(3);
   const [tripTransportModes, setTripTransportModes] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
 
@@ -466,7 +465,6 @@ const Home = () => {
       const params = { 
         origin_id: originId, 
         dest_id: destId,
-        num_trips: tripNumResults,
       };
       
       if (tripDate) params.date = tripDate;
@@ -874,19 +872,6 @@ const Home = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Number of Results */}
-              <div className="space-y-2 mb-6">
-                <label className="small-label">Antal alternativ: {tripNumResults}</label>
-                <input
-                  type="range"
-                  min="1"
-                  max="3"
-                  value={tripNumResults}
-                  onChange={(e) => setTripNumResults(parseInt(e.target.value))}
-                  className="w-full accent-white"
-                />
               </div>
 
               <div className="flex gap-3">
