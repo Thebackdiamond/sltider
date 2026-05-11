@@ -337,19 +337,27 @@ const Home = () => {
     }
   };
 
-  // Initialize T-Centralen on app start
+  // Initialize app with cached station or T-Centralen fallback
   useEffect(() => {
     const initializeApp = async () => {
       if (locationPermissionAsked) return;
       
       setLocationPermissionAsked(true);
       
-      // Load T-Centralen immediately as default
-      await getDefaultStation();
+      // Try to load last selected station first
+      const lastStation = loadLastStation();
+      if (lastStation) {
+        setInitialStation(lastStation);
+        setSelectedStop(lastStation);
+        await fetchDepartures(lastStation.id);
+      } else {
+        // Fallback to T-Centralen if no cached station
+        await getDefaultStation();
+      }
     };
 
     initializeApp();
-  }, [locationPermissionAsked]);
+  }, [locationPermissionAsked, loadLastStation]);
 
   // Fetch departures for a specific stop
   const fetchDepartures = async (stopId) => {
@@ -392,6 +400,22 @@ const Home = () => {
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { recents, addRecent, clearRecents } = useRecentSearches();
   const { permission: notifPerm, alerts, requestPermission, addAlert, removeAlert, hasAlert, sendNotification } = useNotifications();
+
+  // Last selected station caching
+  const saveLastStation = useCallback((station) => {
+    if (station) {
+      localStorage.setItem('sl-last-station', JSON.stringify(station));
+    }
+  }, []);
+
+  const loadLastStation = useCallback(() => {
+    try {
+      const cached = localStorage.getItem('sl-last-station');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   // Close search dropdown on outside click
   useEffect(() => {
@@ -507,6 +531,8 @@ const Home = () => {
   // Handle stop selection - always go to departures
   const handleSelectStop = (stop) => {
     setSelectedStop(stop);
+    setInitialStation(stop);
+    saveLastStation(stop);
     addRecent(stop);
     setSearchQuery("");
     setSearchResults([]);
