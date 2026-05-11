@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Query
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 import os
@@ -16,11 +17,21 @@ import httpx
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Create the main app without a prefix
-app = FastAPI()
-
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Pre-warm the sites cache on startup for instant first searches"""
+    try:
+        await get_cached_sites()
+        logger.info("Sites cache pre-warmed successfully")
+    except Exception as exc:
+        logger.warning(f"Failed to pre-warm sites cache: {exc}")
+    yield
+
+# Create the main app without a prefix
+app = FastAPI(lifespan=lifespan)
 
 # Trafiklab API base URLs (no key required)
 SL_TRANSPORT_BASE = "https://transport.integration.sl.se/v1"
@@ -738,11 +749,3 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Pre-warm the sites cache on startup for instant first searches"""
-    try:
-        await get_cached_sites()
-        logger.info("Sites cache pre-warmed successfully")
-    except Exception as exc:
-        logger.warning(f"Failed to pre-warm sites cache: {exc}")

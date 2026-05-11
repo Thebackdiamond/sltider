@@ -320,10 +320,10 @@ const Home = () => {
   // Get default station (T-Centralen)
   const getDefaultStation = async () => {
     try {
-      const response = await axios.get(`${API}/stops`, {
-        params: { query: "T-Centralen" }
+      const response = await axios.get(`${API}/stops/search`, {
+        params: { q: "T-Centralen" }
       });
-      const tcentralen = response.data.stops?.find(s => 
+      const tcentralen = response.data?.find(s => 
         s.name.toLowerCase().includes('t-centralen') || 
         s.name.toLowerCase().includes('t centralen')
       );
