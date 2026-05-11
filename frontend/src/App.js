@@ -295,6 +295,99 @@ const Home = () => {
   const [locationError, setLocationError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyView, setNearbyView] = useState("map"); // "map" or "list"
+  const [locationPermissionAsked, setLocationPermissionAsked] = useState(false);
+  const [initialStation, setInitialStation] = useState(null);
+
+  // IP-based location fallback
+  const getLocationByIP = async () => {
+    try {
+      const response = await axios.get('https://ipapi.co/json/');
+      return {
+        lat: response.data.latitude,
+        lon: response.data.longitude,
+        city: response.data.city
+      };
+    } catch (error) {
+      // Fallback to Stockholm center if IP location fails
+      return {
+        lat: 59.3293,
+        lon: 18.0686,
+        city: 'Stockholm'
+      };
+    }
+  };
+
+  // Get default station (T-Centralen)
+  const getDefaultStation = async () => {
+    try {
+      const response = await axios.get(`${API}/stops`, {
+        params: { query: "T-Centralen" }
+      });
+      const tcentralen = response.data.stops?.find(s => 
+        s.name.toLowerCase().includes('t-centralen') || 
+        s.name.toLowerCase().includes('t centralen')
+      );
+      if (tcentralen) {
+        setInitialStation(tcentralen);
+        setSelectedStop(tcentralen);
+        await fetchDepartures(tcentralen.id);
+      }
+    } catch (error) {
+      console.error('Failed to get default station:', error);
+    }
+  };
+
+  // Initialize T-Centralen on app start
+  useEffect(() => {
+    const initializeApp = async () => {
+      if (locationPermissionAsked) return;
+      
+      setLocationPermissionAsked(true);
+      
+      // Load T-Centralen immediately as default
+      await getDefaultStation();
+    };
+
+    initializeApp();
+  }, [locationPermissionAsked]);
+
+  // Fetch departures for a specific stop
+  const fetchDepartures = async (stopId) => {
+    setIsLoadingDepartures(true);
+    try {
+      const response = await axios.get(`${API}/departures/${stopId}`);
+      const deps = response.data.departures || [];
+      setDepartures(deps);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch departures:', error);
+      setDepartures([]);
+      return null;
+    } finally {
+      setIsLoadingDepartures(false);
+    }
+  };
+
+  // Fetch nearby stops helper
+  const fetchNearbyStops = async (lat, lon) => {
+    try {
+      const response = await axios.get(`${API}/nearby`, {
+        params: { lat, lon, radius: 1000 },
+      });
+      const stops = response.data.stops || [];
+      setNearbyStops(stops);
+      
+      // If nearby stations found, select the closest one
+      if (stops.length > 0) {
+        const closestStop = stops[0];
+        setInitialStation(closestStop);
+        setSelectedStop(closestStop);
+        await fetchDepartures(closestStop.id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch nearby stops:', error);
+    }
+  };
 
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { recents, addRecent, clearRecents } = useRecentSearches();
@@ -504,6 +597,48 @@ const Home = () => {
               <span className="small-label">Live</span>
             </div>
           </div>
+
+          {/* Loading Status */}
+          {locationPermissionAsked && !initialStation && (
+            <div className="mb-4 p-3 bg-[#141414] border border-[#262626] rounded-lg">
+              <div className="flex items-center gap-3">
+                <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
+                <span className="text-sm text-white">
+                  Laddar T-Centralen...
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Initial Station Display */}
+          {initialStation && !searchQuery && (
+            <div className="mb-4 p-3 bg-[#141414] border border-[#262626] rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-green-400" />
+                  <div>
+                    <span className="text-sm text-white">Vald station:</span>
+                    <div className="text-white font-medium">{initialStation.name}</div>
+                    {initialStation.locality && (
+                      <div className="text-xs text-neutral-400">{initialStation.locality}</div>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setInitialStation(null);
+                    setSelectedStop(null);
+                    setDepartures([]);
+                  }}
+                  className="text-neutral-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Main Search */}
           <div ref={searchRef}>
