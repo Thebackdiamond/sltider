@@ -357,7 +357,7 @@ const Home = () => {
     };
 
     initializeApp();
-  }, [locationPermissionAsked, loadLastStation]);
+  }, [locationPermissionAsked]);
 
   // Fetch departures for a specific stop
   const fetchDepartures = async (stopId) => {
