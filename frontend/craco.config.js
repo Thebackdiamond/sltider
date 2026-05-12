@@ -70,12 +70,18 @@ let webpackConfig = {
             ...MiniCssExtractPlugin.options,
             runtime: false,
             insert: (linkTag) => {
-              // Load CSS asynchronously to prevent render blocking
+              // Load CSS asynchronously with high priority
               linkTag.rel = 'preload';
               linkTag.as = 'style';
               linkTag.onload = function() {
                 this.onload = null;
                 this.rel = 'stylesheet';
+              };
+              // Add media print trick for faster rendering
+              linkTag.media = 'print';
+              linkTag.onload = function() {
+                this.onload = null;
+                this.media = 'all';
               };
             },
           };
