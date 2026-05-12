@@ -17,8 +17,9 @@
             body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Oxygen','Ubuntu','Cantarell','Fira Sans','Droid Sans','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;background-color:#0a0a0a}#root{min-height:100vh}
         </style>
         
-        <!-- Font with display swap for faster loading -->
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
+        <!-- Preload Google Fonts to prevent render blocking -->
+        <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+        <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" /></noscript>
         
         <meta name="description" content="SL Sök - Stockholm public transport search" />
         <title>SL Sök</title>

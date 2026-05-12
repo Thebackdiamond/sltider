@@ -89,6 +89,7 @@ const DepartureRow = ({ departure, stopId, onToggleAlert, isAlerted }) => {
             onClick={() => onToggleAlert(departure.line, departure.destination)}
             className={`p-1 rounded transition-colors ${isAlerted ? "text-yellow-400" : "text-neutral-600 hover:text-neutral-400"}`}
             title={isAlerted ? "Ta bort bevakning" : "Bevaka avgång"}
+            aria-label={isAlerted ? "Ta bort bevakning för linje " + departure.line + " mot " + departure.destination : "Bevaka avgång för linje " + departure.line + " mot " + departure.destination}
             data-testid="departure-alert-toggle"
           >
             {isAlerted ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
@@ -683,7 +684,8 @@ const Home = () => {
                   disabled={isLoadingNearby}
                   variant="ghost"
                   size="sm"
-                  className="text-neutral-400 hover:text-white"
+                  className="text-neutral-300 hover:text-white focus:text-white"
+                  aria-label={isLoadingNearby ? "Söker efter hållplatser nära din position" : "Hitta hållplatser nära din position"}
                   data-testid="nearby-quick-button"
                 >
                   {isLoadingNearby ? (
@@ -730,6 +732,7 @@ const Home = () => {
                               isFavorite(stop.id) ? removeFavorite(stop.id) : addFavorite(stop);
                             }}
                             className={`favorite-btn flex-shrink-0 ${isFavorite(stop.id) ? "active" : "text-neutral-500"}`}
+                            aria-label={isFavorite(stop.id) ? "Ta bort " + stop.name + " från favoriter" : "Lägg till " + stop.name + " i favoriter"}
                             data-testid="favorite-toggle-button"
                           >
                             <Star className="w-4 h-4" fill={isFavorite(stop.id) ? "currentColor" : "none"} />
@@ -743,7 +746,12 @@ const Home = () => {
                     <CommandGroup heading={
                       <div className="flex items-center justify-between">
                         <span>Senaste sökningar</span>
-                        <button onClick={clearRecents} className="text-neutral-500 hover:text-white text-xs transition-colors" data-testid="clear-recent-searches">
+                        <button 
+                          onClick={clearRecents} 
+                          className="text-neutral-500 hover:text-white text-xs transition-colors" 
+                          aria-label="Rensa senaste sökningar"
+                          data-testid="clear-recent-searches"
+                        >
                           Rensa
                         </button>
                       </div>
@@ -859,11 +867,13 @@ const Home = () => {
                           <button
                             key={mode.key}
                             onClick={() => setModeFilter(mode.key)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all border ${
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
                               isActive
                                 ? "bg-white text-black border-white"
-                                : "bg-transparent text-neutral-400 border-[#262626] hover:border-white/30"
+                                : "bg-transparent text-neutral-300 border-[#262626] hover:border-white/30 hover:text-white"
                             }`}
+                            aria-label={`Filtrera på ${mode.label.toLowerCase()}, ${count} avgångar`}
+                            aria-pressed={isActive}
                             data-testid={`filter-${mode.key.toLowerCase()}`}
                           >
                             {mode.icon && <mode.icon className={`w-3 h-3 ${isActive ? "text-black" : mode.color}`} />}
@@ -1211,13 +1221,23 @@ const Home = () => {
                 </h2>
                 <div className="flex items-center gap-2">
                   {nearbyStops.length > 0 && (
-                    <div className="flex bg-[#1A1A1A] border border-[#262626] rounded overflow-hidden" data-testid="nearby-view-toggle">
-                      <button onClick={() => setNearbyView("map")}
-                        className={`p-2 transition-colors ${nearbyView === "map" ? "bg-white text-black" : "text-neutral-400 hover:text-white"}`}>
+                    <div className="flex bg-[#1A1A1A] border border-[#262626] rounded overflow-hidden" data-testid="nearby-view-toggle" role="tablist">
+                      <button 
+                        onClick={() => setNearbyView("map")}
+                        className={`p-2 transition-colors ${nearbyView === "map" ? "bg-white text-black" : "text-neutral-400 hover:text-white"}`}
+                        aria-label="Visa karta över närliggande hållplatser"
+                        aria-selected={nearbyView === "map"}
+                        role="tab"
+                      >
                         <MapIcon className="w-4 h-4" />
                       </button>
-                      <button onClick={() => setNearbyView("list")}
-                        className={`p-2 transition-colors ${nearbyView === "list" ? "bg-white text-black" : "text-neutral-400 hover:text-white"}`}>
+                      <button 
+                        onClick={() => setNearbyView("list")}
+                        className={`p-2 transition-colors ${nearbyView === "list" ? "bg-white text-black" : "text-neutral-400 hover:text-white"}`}
+                        aria-label="Visa lista över närliggande hållplatser"
+                        aria-selected={nearbyView === "list"}
+                        role="tab"
+                      >
                         <List className="w-4 h-4" />
                       </button>
                     </div>

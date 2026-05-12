@@ -59,6 +59,27 @@ let webpackConfig = {
         // Add compression plugin for production
         const CompressionPlugin = require('compression-webpack-plugin');
         webpackConfig.plugins.push(new CompressionPlugin());
+        
+        // Optimize CSS loading to prevent render blocking
+        const MiniCssExtractPlugin = webpackConfig.plugins.find(
+          plugin => plugin.constructor.name === 'MiniCssExtractPlugin'
+        );
+        
+        if (MiniCssExtractPlugin) {
+          MiniCssExtractPlugin.options = {
+            ...MiniCssExtractPlugin.options,
+            runtime: false,
+            insert: (linkTag) => {
+              // Load CSS asynchronously to prevent render blocking
+              linkTag.rel = 'preload';
+              linkTag.as = 'style';
+              linkTag.onload = function() {
+                this.onload = null;
+                this.rel = 'stylesheet';
+              };
+            },
+          };
+        }
       }
 
       // Add ignored patterns to reduce watched directories
