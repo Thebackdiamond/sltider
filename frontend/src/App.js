@@ -567,6 +567,9 @@ const Home = () => {
               toast.info("Inga hållplatser hittades i närheten");
             } else {
               toast.success(`Hittade ${response.data.stops.length} hållplatser`);
+              // Automatically switch to nearby tab to show results
+              setActiveTab("nearby");
+              setNearbyView("list"); // Default to list view
             }
           } catch (error) {
             console.error('Nearby stops error:', error);
