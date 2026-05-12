@@ -624,48 +624,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Loading Status */}
-          {locationPermissionAsked && !initialStation && (
-            <div className="mb-4 p-3 bg-[#141414] border border-[#262626] rounded-lg">
-              <div className="flex items-center gap-3">
-                <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
-                <span className="text-sm text-white">
-                  Laddar T-Centralen...
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Initial Station Display */}
-          {initialStation && !searchQuery && (
-            <div className="mb-4 p-3 bg-[#141414] border border-[#262626] rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-green-400" />
-                  <div>
-                    <span className="text-sm text-white">Vald station:</span>
-                    <div className="text-white font-medium">{initialStation.name}</div>
-                    {initialStation.locality && (
-                      <div className="text-xs text-neutral-400">{initialStation.locality}</div>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setInitialStation(null);
-                    setSelectedStop(null);
-                    setDepartures([]);
-                  }}
-                  className="text-neutral-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
+          
           {/* Main Search */}
           <div ref={searchRef}>
             <Command className="bg-[#141414] border border-[#262626] rounded-lg" shouldFilter={false}>
@@ -677,6 +636,25 @@ const Home = () => {
                 className="h-12 text-white"
                 data-testid="global-search-input"
               />
+              <div className="flex items-center gap-2 p-2 border-t border-[#262626]">
+                <Button
+                  onClick={handleFetchNearby}
+                  disabled={isLoadingNearby}
+                  variant="ghost"
+                  size="sm"
+                  className="text-neutral-400 hover:text-white"
+                  data-testid="nearby-quick-button"
+                >
+                  {isLoadingNearby ? (
+                    <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Hittar position...</>
+                  ) : (
+                    <><LocateFixed className="w-4 h-4 mr-2" />Hållplatser nära mig</>
+                  )}
+                </Button>
+                {locationError && (
+                  <span className="text-xs text-red-400">{locationError}</span>
+                )}
+              </div>
               {searchOpen && (
                 <CommandList>
                   {isSearching && (
