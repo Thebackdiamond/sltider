@@ -22,13 +22,29 @@ api_router = APIRouter(prefix="/api")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Pre-warm the sites cache on startup for instant first searches"""
-    try:
-        await get_cached_sites()
-        logger.info("Sites cache pre-warmed successfully")
-    except Exception as exc:
-        logger.warning(f"Failed to pre-warm sites cache: {exc}")
+    """Start background cache warming without blocking startup"""
+    import asyncio
+    
+    async def warm_cache_background():
+        """Warm cache in background without blocking startup"""
+        try:
+            await get_cached_sites()
+            logger.info("Sites cache pre-warmed successfully")
+        except Exception as exc:
+            logger.warning(f"Failed to pre-warm sites cache: {exc}")
+    
+    # Start cache warming in background
+    cache_task = asyncio.create_task(warm_cache_background())
+    
     yield
+    
+    # Clean up background task on shutdown
+    if not cache_task.done():
+        cache_task.cancel()
+        try:
+            await cache_task
+        except asyncio.CancelledError:
+            pass
 
 # Create the main app without a prefix
 app = FastAPI(lifespan=lifespan)
@@ -107,7 +123,10 @@ class TripPlanResponse(BaseModel):
 # ── HTTP Client ──────────────────────────────────────────────────
 
 async def get_http_client():
-    return httpx.AsyncClient(timeout=15.0)
+    return httpx.AsyncClient(
+        timeout=10.0,  # Reduced timeout for faster responses
+        limits=httpx.Limits(max_keepalive_connections=20, max_connections=100)
+    )
 
 
 # ── Sites Cache for fast local search ────────────────────────────

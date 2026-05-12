@@ -544,34 +544,72 @@ const Home = () => {
   const handleFetchNearby = () => {
     if (!navigator.geolocation) {
       setLocationError("Geolokalisering stöds inte i din webbläsare");
+      toast.error("Geolokalisering stöds inte i din webbläsare");
       return;
     }
+    
     setIsLoadingNearby(true);
     setLocationError(null);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lon: longitude });
-        try {
-          const response = await axios.get(`${API}/nearby`, {
-            params: { lat: latitude, lon: longitude, radius: 1000 },
-          });
-          setNearbyStops(response.data.stops || []);
-          if (response.data.stops?.length === 0) {
-            toast.info("Inga hållplatser hittades i närheten");
+    
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({ lat: latitude, lon: longitude });
+            
+            const response = await axios.get(`${API}/nearby`, {
+              params: { lat: latitude, lon: longitude, radius: 1000 },
+            });
+            
+            setNearbyStops(response.data.stops || []);
+            if (response.data.stops?.length === 0) {
+              toast.info("Inga hållplatser hittades i närheten");
+            } else {
+              toast.success(`Hittade ${response.data.stops.length} hållplatser`);
+            }
+          } catch (error) {
+            console.error('Nearby stops error:', error);
+            toast.error("Kunde inte hämta hållplatser i närheten");
+            setLocationError("Kunde inte hämta hållplatser");
+          } finally {
+            setIsLoadingNearby(false);
           }
-        } catch (e) {
-          toast.error("Kunde inte hämta hållplatser i närheten");
-        } finally {
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          let errorMessage = "Kunde inte hämta din position.";
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Platsåtkomst nekades. Tillåt platsåtkomst i webbläsaren.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Position information är inte tillgänglig.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Position request tog för lång tid.";
+              break;
+            default:
+              errorMessage = "Okänt fel vid hämtning av position.";
+          }
+          
+          setLocationError(errorMessage);
+          toast.error(errorMessage);
           setIsLoadingNearby(false);
+        },
+        { 
+          enableHighAccuracy: false, // Changed to false for better compatibility
+          timeout: 15000, // Increased timeout
+          maximumAge: 60000 // Allow cached positions
         }
-      },
-      () => {
-        setLocationError("Kunde inte hämta din position. Tillåt platsåtkomst.");
-        setIsLoadingNearby(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+      );
+    } catch (error) {
+      console.error('Geolocation API error:', error);
+      setLocationError("Geolokalisering misslyckades");
+      toast.error("Geolokalisering misslyckades");
+      setIsLoadingNearby(false);
+    }
   };
 
   // Plan trip

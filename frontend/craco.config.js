@@ -31,6 +31,23 @@ let webpackConfig = {
       '@': path.resolve(__dirname, 'src'),
     },
     configure: (webpackConfig) => {
+      // Performance optimizations
+      if (!isDevServer) {
+        // Production optimizations
+        webpackConfig.optimization = {
+          ...webpackConfig.optimization,
+          splitChunks: {
+            chunks: 'all',
+            cacheGroups: {
+              vendor: {
+                test: /[\\/]node_modules[\\/]/,
+                name: 'vendors',
+                chunks: 'all',
+              },
+            },
+          },
+        };
+      }
 
       // Add ignored patterns to reduce watched directories
         webpackConfig.watchOptions = {
