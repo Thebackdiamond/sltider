@@ -13,6 +13,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 import httpx
+from zoneinfo import ZoneInfo
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -507,14 +508,16 @@ def calculate_display_time(time_str: Optional[str]) -> str:
         # Parse the time - SL API returns local time (Stockholm timezone)
         dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
         
-        # Use Stockholm timezone (UTC+2) for current time comparison
-        from datetime import timedelta
-        stockholm_tz = timezone(timedelta(hours=2))
+        # Use proper Stockholm timezone with daylight saving time
+        stockholm_tz = ZoneInfo('Europe/Stockholm')
         now = datetime.now(stockholm_tz)
         
         # Convert dt to Stockholm timezone if it's in UTC
         if dt.tzinfo == timezone.utc:
             dt = dt.astimezone(stockholm_tz)
+        elif dt.tzinfo is None:
+            # If dt has no timezone, assume it's Stockholm time
+            dt = dt.replace(tzinfo=stockholm_tz)
         
         diff = (dt - now).total_seconds() / 60
 
@@ -676,11 +679,22 @@ async def plan_trip(
 
 
 def format_time(iso_str: str) -> str:
-    """Format ISO time to HH:MM"""
+    """Format ISO time to HH:MM with Stockholm timezone"""
     if not iso_str:
         return "?"
     try:
         dt = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+        
+        # Use Stockholm timezone with daylight saving time
+        stockholm_tz = ZoneInfo('Europe/Stockholm')
+        
+        # Convert dt to Stockholm timezone if it's in UTC
+        if dt.tzinfo == timezone.utc:
+            dt = dt.astimezone(stockholm_tz)
+        elif dt.tzinfo is None:
+            # If dt has no timezone, assume it's Stockholm time
+            dt = dt.replace(tzinfo=stockholm_tz)
+        
         return dt.strftime("%H:%M")
     except Exception:
         return iso_str
