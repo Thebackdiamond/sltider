@@ -270,6 +270,7 @@ const Home = () => {
   const [selectedStop, setSelectedStop] = useState(null);
   const [departures, setDepartures] = useState([]);
   const [isLoadingDepartures, setIsLoadingDepartures] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState(null);
   const [activeTab, setActiveTab] = useState("departures");
   const [modeFilter, setModeFilter] = useState("ALL");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -363,6 +364,7 @@ const Home = () => {
   // Fetch departures for a specific stop
   const fetchDepartures = async (stopId) => {
     setIsLoadingDepartures(true);
+    setDepartures([]); // Clear old results immediately
     try {
       const response = await axios.get(`${API}/departures/${stopId}`);
       const deps = response.data.departures || [];
@@ -497,12 +499,12 @@ const Home = () => {
     if (!selectedStop) return;
     let mounted = true;
     const doFetch = async () => {
-      setIsLoadingDepartures(true);
       try {
         const response = await axios.get(`${API}/departures/${selectedStop.id}`);
         if (mounted) {
           const deps = response.data.departures || [];
           setDepartures(deps);
+          setLastUpdateTime(new Date());
           setSelectedStop((prev) => prev ? { ...prev, name: response.data.site_name } : prev);
 
           // Check departure alerts
@@ -525,7 +527,7 @@ const Home = () => {
       }
     };
     doFetch();
-    const interval = setInterval(doFetch, 30000);
+    const interval = setInterval(doFetch, 15000); // Update every 15 seconds for better real-time feel
     return () => { mounted = false; clearInterval(interval); };
   }, [selectedStop?.id, hasAlert, sendNotification]);
 
@@ -856,6 +858,16 @@ const Home = () => {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Last Update Time */}
+                  {selectedStop && lastUpdateTime && (
+                    <div className="flex items-center gap-2 text-xs text-neutral-500 mb-3">
+                      <Clock className="w-3 h-3" />
+                      <span>Uppdaterad {new Date(lastUpdateTime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-neutral-600">• Auto-uppdateras var 15:e sekund</span>
+                    </div>
+                  )}
+                  
                   {/* Transport Mode Filter */}
                   {selectedStop && departures.length > 0 && (
                     <div className="flex flex-wrap gap-2" data-testid="transport-mode-filter">
@@ -867,7 +879,7 @@ const Home = () => {
                           <button
                             key={mode.key}
                             onClick={() => setModeFilter(mode.key)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                            className={`flex items-center gap-2 px-2 py-1.5 rounded-full border text-xs font-medium transition-all flex-shrink-0 ${
                               isActive
                                 ? "bg-white text-black border-white"
                                 : "bg-transparent text-neutral-300 border-[#262626] hover:border-white/30 hover:text-white"
