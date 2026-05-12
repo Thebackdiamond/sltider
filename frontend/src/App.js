@@ -1245,17 +1245,18 @@ const Home = () => {
               {nearbyStops.length > 0 && nearbyView === "map" && userLocation && (
                 <div className="rounded-lg overflow-hidden border border-[#262626] mb-4" style={{ height: "400px" }} data-testid="nearby-map">
                   <MapContainer
+                    key={`${userLocation.lat}-${userLocation.lon}`} // Force re-render on location change
                     center={[userLocation.lat, userLocation.lon]}
                     zoom={15}
                     style={{ height: "100%", width: "100%" }}
                     zoomControl={true}
+                    scrollWheelZoom={false}
                   >
                     <TileLayer
                       attribution='&copy; <a href="https://carto.com/">CARTO</a>'
                       url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                     />
-                    <RecenterMap lat={userLocation.lat} lon={userLocation.lon} />
-
+                    
                     {/* User location marker */}
                     <Marker position={[userLocation.lat, userLocation.lon]} icon={userIcon}>
                       <Popup><span className="text-sm font-semibold">Din position</span></Popup>
@@ -1267,7 +1268,7 @@ const Home = () => {
 
                     {/* Stop markers */}
                     {nearbyStops.map((stop) => (
-                      <Marker key={stop.id} position={[stop.lat, stop.lon]} icon={stopIcon}>
+                      <Marker key={`stop-${stop.id}`} position={[stop.lat, stop.lon]} icon={stopIcon}>
                         <Popup>
                           <div className="text-sm min-w-[140px]">
                             <div className="font-bold">{stop.name}</div>

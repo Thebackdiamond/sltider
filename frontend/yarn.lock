@@ -4097,6 +4097,14 @@ compressible@~2.0.18:
   dependencies:
     mime-db ">= 1.43.0 < 2"
 
+compression-webpack-plugin@^12.0.0:
+  version "12.0.0"
+  resolved "https://registry.npmjs.org/compression-webpack-plugin/-/compression-webpack-plugin-12.0.0.tgz"
+  integrity sha512-LR4mS19Jqq41XfA3xVMLrtzVNzqJbUHdzPeLRfQoLiAS9s87f0021fDuU89xxVQFcB6d20ufBkv4j1rQ4OowHw==
+  dependencies:
+    schema-utils "^4.2.0"
+    serialize-javascript "^7.0.3"
+
 compression@^1.7.4:
   version "1.8.1"
   resolved "https://registry.npmjs.org/compression/-/compression-1.8.1.tgz"
@@ -9502,6 +9510,11 @@ serialize-javascript@^6.0.0:
   integrity sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==
   dependencies:
     randombytes "^2.1.0"
+
+serialize-javascript@^7.0.3:
+  version "7.0.5"
+  resolved "https://registry.npmjs.org/serialize-javascript/-/serialize-javascript-7.0.5.tgz"
+  integrity sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==
 
 serve-index@^1.9.1:
   version "1.9.2"
