@@ -504,8 +504,18 @@ def calculate_display_time(time_str: Optional[str]) -> str:
     if not time_str:
         return "?"
     try:
+        # Parse the time - SL API returns local time (Stockholm timezone)
         dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
-        now = datetime.now(timezone.utc)
+        
+        # Use Stockholm timezone (UTC+2) for current time comparison
+        from datetime import timedelta
+        stockholm_tz = timezone(timedelta(hours=2))
+        now = datetime.now(stockholm_tz)
+        
+        # Convert dt to Stockholm timezone if it's in UTC
+        if dt.tzinfo == timezone.utc:
+            dt = dt.astimezone(stockholm_tz)
+        
         diff = (dt - now).total_seconds() / 60
 
         if diff < 1:
